@@ -87,7 +87,7 @@ export default function DecodeTab() {
     if (!decryptedResult?.payload_base64) return;
     const a = document.createElement('a');
     a.href = decryptedResult.payload_base64;
-    a.download = 'decrypted_secret.bin';
+    a.download = decryptedResult.suggested_filename || 'decrypted_secret.bin';
     a.click();
   };
 
@@ -286,9 +286,14 @@ export default function DecodeTab() {
             <div className="p-6 rounded-xl bg-cyber-950 border border-cyber-800 text-center space-y-4">
               <FileText className="w-12 h-12 text-cyber-accent mx-auto" />
               <div>
-                <h4 className="font-mono text-sm font-bold text-slate-200">Binary File Decrypted</h4>
+                <h4 className="font-mono text-sm font-bold text-slate-200">
+                  {decryptedResult.file_description || 'Binary File'} Decrypted
+                </h4>
                 <p className="text-xs text-slate-400 mt-1">
                   Payload size: {decryptedResult.payload_length_bytes} bytes
+                  {decryptedResult.detected_extension && decryptedResult.detected_extension !== 'bin' && (
+                    <span> &bull; Detected format: <strong className="text-cyber-accent uppercase font-mono">.{decryptedResult.detected_extension}</strong></span>
+                  )}
                 </p>
               </div>
               <button
@@ -296,7 +301,7 @@ export default function DecodeTab() {
                 className="px-6 py-2.5 rounded-xl bg-cyber-emerald text-cyber-950 font-mono font-bold text-xs hover:bg-emerald-400 transition-all inline-flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
-                <span>Download Decrypted File</span>
+                <span>Download {decryptedResult.suggested_filename || 'Decrypted File'}</span>
               </button>
             </div>
           )}

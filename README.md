@@ -30,39 +30,29 @@ cd CipherLoom
 
 ---
 
-### 2. Backend Recreation (Python + FastAPI)
+### 2. Backend Setup (Python + FastAPI)
 
-1. Navigate to the backend directory:
+1. Create a clean Python virtual environment at the project root:
    ```bash
-   cd backend
+   python3 -m venv .venv
    ```
 
-2. Create a clean Python virtual environment:
-   ```bash
-   python3 -m venv venv
-   ```
-
-3. Activate the virtual environment:
+2. Activate the virtual environment:
    * **Linux / macOS**:
      ```bash
-     source venv/bin/activate
+     source .venv/bin/activate
      ```
    * **Windows (PowerShell)**:
      ```powershell
-     .\venv\Scripts\Activate.ps1
+     .\.venv\Scripts\Activate.ps1
      ```
 
-4. Install the required backend dependencies:
+3. Install the required backend dependencies:
    ```bash
    pip install --upgrade pip
    pip install -r requirements.txt
    ```
    *(Dependencies: `fastapi`, `uvicorn[standard]`, `python-multipart`, `numpy`, `scipy`, `pydub`)*
-
-5. Return to the project root:
-   ```bash
-   cd ..
-   ```
 
 ---
 
@@ -156,11 +146,11 @@ print('✓ OTP Engine: OK')
 ```
 CipherLoom/
 ├── run.sh                          # Unified startup script
+├── requirements.txt                # Python dependencies
 ├── .gitignore                      # Excludes venv, node_modules, keys, and temp files
 ├── README.md                       # Setup and recreation guide
 │
 ├── backend/
-│   ├── requirements.txt            # Python dependencies
 │   └── app/
 │       ├── __init__.py
 │       ├── main.py                 # FastAPI endpoints & static file server

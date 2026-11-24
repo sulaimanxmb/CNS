@@ -45,3 +45,35 @@ def get_audio_info(file_bytes: bytes, filename: str = "") -> Dict[str, Any]:
         return get_mp3_capacity(file_bytes)
     else:
         raise ValueError("Unsupported audio format. Please provide a .wav or .mp3 audio file.")
+
+
+def sniff_file_format(data: bytes) -> Tuple[str, str, str]:
+    """
+    Detect file extension, MIME type, and friendly description from magic bytes.
+    Returns: (extension, mime_type, description)
+    """
+    if data.startswith(b"%PDF-"):
+        return "pdf", "application/pdf", "PDF Document"
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png", "image/png", "PNG Image"
+    if data.startswith(b"\xff\xd8\xff"):
+        return "jpg", "image/jpeg", "JPEG Image"
+    if data.startswith(b"GIF87a") or data.startswith(b"GIF89a"):
+        return "gif", "image/gif", "GIF Image"
+    if data.startswith(b"PK\x03\x04"):
+        return "zip", "application/zip", "ZIP Archive / Office Document"
+    if data.startswith(b"RIFF") and b"WAVE" in data[:16]:
+        return "wav", "audio/wav", "WAV Audio"
+    if data.startswith(b"RIFF") and b"WEBP" in data[:16]:
+        return "webp", "image/webp", "WebP Image"
+    if data.startswith(b"ID3") or (len(data) > 2 and data[0] == 0xFF and (data[1] & 0xE0) == 0xE0):
+        return "mp3", "audio/mpeg", "MP3 Audio"
+    if data.startswith(b"OggS"):
+        return "ogg", "audio/ogg", "OGG Audio"
+    if data.startswith(b"\x1f\x8b"):
+        return "tar.gz", "application/gzip", "GZ Archive"
+    if data.startswith(b"BM"):
+        return "bmp", "image/bmp", "Bitmap Image"
+    if data.startswith(b"\x00\x00\x01\x00"):
+        return "ico", "image/x-icon", "Icon File"
+    return "bin", "application/octet-stream", "Binary Data"

@@ -22,7 +22,7 @@ from app.otp import otp_encrypt, otp_decrypt, calculate_entropy, parse_otp_key_p
 from app.stego_wav import embed_in_wav, extract_from_wav, get_wav_capacity
 from app.stego_mp3 import embed_in_mp3, extract_from_mp3, get_mp3_capacity
 from app.steganalysis import analyze_wav_pair, analyze_mp3_pair
-from app.utils import detect_audio_format, get_audio_info
+from app.utils import detect_audio_format, get_audio_info, sniff_file_format
 
 app = FastAPI(
     title="CipherLoom API",
@@ -196,10 +196,16 @@ async def extract_secret(
     is_text = True
     try:
         text_content = decrypted_bytes.decode("utf-8")
+        # Check if text contains control characters (suggesting it's actually binary data)
+        if any(b < 32 and b not in (9, 10, 13) for b in decrypted_bytes[:1024]):
+            is_text = False
+            text_content = None
     except UnicodeDecodeError:
         is_text = False
         text_content = None
         
+    ext, mime_type, file_desc = sniff_file_format(decrypted_bytes)
+    suggested_filename = f"decrypted_secret.{ext}"
     payload_base64 = base64.b64encode(decrypted_bytes).decode("ascii")
     
     return {
@@ -208,7 +214,10 @@ async def extract_secret(
         "payload_length_bytes": len(decrypted_bytes),
         "is_text": is_text,
         "text_content": text_content,
-        "payload_base64": f"data:application/octet-stream;base64,{payload_base64}",
+        "detected_extension": ext,
+        "file_description": file_desc,
+        "suggested_filename": suggested_filename,
+        "payload_base64": f"data:{mime_type};base64,{payload_base64}",
         "message": "Hidden data successfully extracted and decrypted with True One-Time Pad!"
     }
 
