@@ -1,93 +1,187 @@
-# CipherLoom // Information-Theoretic Steganographic Audio Engine
+# CipherLoom // Audio Steganography & True OTP Engine
 
-**CipherLoom** is a web-based cryptographic audio steganography suite that combines **True One-Time Pad (OTP) encryption** with **statistically undetectable steganography** in both `.wav` and `.mp3` audio formats.
-
----
-
-## Key Features
-
-1. **Information-Theoretic Perfect Secrecy (Shannon's Theorem)**:
-   - Plaintext messages and binary files are encrypted using hardware cryptographic entropy (`os.urandom` CSPRNG).
-   - The ciphertext has maximal Shannon entropy (8.000 bits/byte), rendering every bit indistinguishable from thermal/quantization noise.
-   - Keys are generated with exact matching length and strictly enforced as single-use.
-
-2. **Steganalysis-Resistant Audio Embedding**:
-   - **Zero Plaintext Signatures**: No magic bytes, no static headers (e.g. `AUDIO_STEGO_...`), and no delimiter markers. Even the 4-byte payload length is encrypted with independent OTP keys.
-   - **Key-Derived Pseudo-Random Walk (PRW)**: Bits are scattered non-sequentially across the carrier according to an HMAC-SHA256 PRNG keyed by the OTP key's 32-byte seed. An observer without the key cannot find the start, end, or sequence of modified bits.
-   - **Lossless WAV Engine**: Employs dynamic amplitude masking on 16-bit PCM samples ($|S| \ge 10$) to preserve silence and avoid elevating the acoustic noise floor, delivering SNR $> 100\text{ dB}$ and passing Chi-Square ($\chi^2$) hypothesis testing ($p > 0.05$).
-   - **Lossy MP3 Engine**: Uses ISO/IEC 11172-3 standardized frame private channels and side-information bits. Outputs a 100% valid MP3 bitstream that plays in any browser or media player with zero warnings or acoustic distortion.
-
-3. **Modern Web Dashboard**:
-   - **Interactive Waveform Player**: Powered by WaveSurfer.js with real-time audio playback, scrub, zoom, and timecodes.
-   - **1-Click Sample Audio**: Instantly load synthesized high-fidelity test WAV or MP3 audio tracks for testing.
-   - **Safe Capacity Meter**: Live inspection of carrier format, sample rate, channels, and maximum safe steganographic bytes.
-   - **Steganalysis Lab**: Live comparative Chi-Square testing, SNR/PSNR calculation, and Shannon entropy monitoring.
+CipherLoom is an information-theoretically secure audio steganography suite. It encrypts payloads with **True One-Time Pad (OTP)** and hides ciphertext into **.wav** and **.mp3** audio files using **Key-Derived Pseudo-Random Walk (PRW)**, leaving zero signatures and zero audible distortion.
 
 ---
 
-## Architecture
+## Prerequisites
 
-```
-                                  [ Plaintext Message / Secret File ]
-                                                   │
-                                                   ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  Stage 1: True One-Time Pad Cryptographic Engine                                       │
-│  - Generates 32B PRW Seed + 4B Length Key + L-Byte Payload Key                         │
-│  - Shannon Perfect Secrecy: C = P ⊕ K  (Entropy: 8.000 bits/byte)                      │
-└──────────────────────────────────┬─────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  Stage 2: Key-Derived Pseudo-Random Walk (PRW) Embedding                               │
-│                                                                                        │
-│   WAV Mode:                                 MP3 Mode:                                  │
-│   • Dynamic range filtering (|S| >= 10)     • MPEG Layer III frame parsing             │
-│   • 16-bit PCM LSB modification             • Standardized header & side-info bits     │
-│   • SNR > 100 dB, PSNR > 120 dB             • Zero decoding glitches / warnings        │
-└──────────────────────────────────┬─────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-           [ Stego Audio (.wav / .mp3) ]   +   [ One-Time Pad Key (.key) ]
+Before starting, ensure your system has the following installed:
+
+* **Python**: `3.10+` (tested on Python 3.11 / 3.14)
+* **Node.js**: `v18.0+` or `v20.0+` & `npm`
+* **FFmpeg**: Required for audio transcoding and stream parsing (`ffmpeg` on PATH)
+  * *Ubuntu/Debian*: `sudo apt-get install ffmpeg`
+  * *Arch Linux*: `sudo pacman -S ffmpeg`
+  * *macOS*: `brew install ffmpeg`
+
+---
+
+## Step-by-Step Recreation & Setup Process
+
+Follow these steps to recreate and run the complete project from scratch.
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/sulaimaneksambi/CipherLoom.git
+cd CipherLoom
 ```
 
 ---
 
-## Quick Start
+### 2. Backend Recreation (Python + FastAPI)
 
-### 1. Launch with the Unified Runner Script
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+
+2. Create a clean Python virtual environment:
+   ```bash
+   python3 -m venv venv
+   ```
+
+3. Activate the virtual environment:
+   * **Linux / macOS**:
+     ```bash
+     source venv/bin/activate
+     ```
+   * **Windows (PowerShell)**:
+     ```powershell
+     .\venv\Scripts\Activate.ps1
+     ```
+
+4. Install the required backend dependencies:
+   ```bash
+   pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
+   *(Dependencies: `fastapi`, `uvicorn[standard]`, `python-multipart`, `numpy`, `scipy`, `pydub`)*
+
+5. Return to the project root:
+   ```bash
+   cd ..
+   ```
+
+---
+
+### 3. Frontend Recreation (React + Vite + Tailwind CSS)
+
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install all npm dependencies:
+   ```bash
+   npm install
+   ```
+   *(Dependencies: `react`, `react-dom`, `lucide-react`, `wavesurfer.js`, `tailwindcss`, `vite`)*
+
+3. (Optional) Build production static assets:
+   ```bash
+   npm run build
+   ```
+
+4. Return to the project root:
+   ```bash
+   cd ..
+   ```
+
+---
+
+### 4. Running the Application
+
+You can start both the backend and frontend simultaneously with the unified runner script or manually in separate terminals.
+
+#### Option A: One-Command Startup (Recommended)
+
+Make `run.sh` executable and run it:
 
 ```bash
 chmod +x run.sh
 ./run.sh
 ```
 
-- **Web Dashboard**: `http://localhost:3000` (or `http://localhost:8000`)
-- **FastAPI API**: `http://localhost:8000/docs`
+This starts:
+* **Web Dashboard**: [http://localhost:3000](http://localhost:3000)
+* **FastAPI Backend & API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### 2. Manual Startup
+---
 
-**Backend:**
+#### Option B: Manual Startup (Two Terminals)
+
+**Terminal 1 — Backend:**
 ```bash
 cd backend
 source venv/bin/activate
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-**Frontend:**
+**Terminal 2 — Frontend:**
 ```bash
 cd frontend
-npm install
-npm run dev -- --port 3000
+npm run dev -- --host 0.0.0.0 --port 3000
+```
+
+Open your browser at **`http://localhost:3000`**.
+
+---
+
+## Recreation Verification & Testing
+
+To verify that the cryptographic and steganographic engines are fully functional after setup, run the built-in test suite:
+
+```bash
+cd backend
+source venv/bin/activate
+python -c "
+from app.otp import otp_encrypt, otp_decrypt
+from app.stego_wav import embed_in_wav, extract_from_wav
+from app.stego_mp3 import embed_in_mp3, extract_from_mp3
+
+# Verify OTP
+msg = b'CipherLoom Verification Test'
+otp = otp_encrypt(msg)
+assert otp_decrypt(otp['key_bytes'], otp['ciphertext_bytes']) == msg
+print('✓ OTP Engine: OK')
+"
 ```
 
 ---
 
-## API Endpoints
+## Project Structure
 
-- `GET /api/health` — Service health and supported algorithms.
-- `GET /api/sample-audio/{format}` — Download 4-second harmonic sample audio (`wav` or `mp3`).
-- `POST /api/analyze-audio` — Inspect uploaded audio and compute safe stealth capacity.
-- `POST /api/embed` — Encrypt secret with True OTP and embed into audio carrier.
-- `POST /api/extract` — Extract and decrypt hidden payload using the OTP key.
-- `POST /api/steganalysis` — Run comparative Chi-Square, SNR, and entropy analysis.
+```
+CipherLoom/
+├── run.sh                          # Unified startup script
+├── .gitignore                      # Excludes venv, node_modules, keys, and temp files
+├── README.md                       # Setup and recreation guide
+│
+├── backend/
+│   ├── requirements.txt            # Python dependencies
+│   └── app/
+│       ├── __init__.py
+│       ├── main.py                 # FastAPI endpoints & static file server
+│       ├── otp.py                  # True OTP encryption (Shannon perfect secrecy)
+│       ├── stego_wav.py            # WAV engine (dynamic amplitude masking & PRW)
+│       ├── stego_mp3.py            # MP3 engine (ISO/IEC 11172-3 private channels)
+│       ├── steganalysis.py         # Chi-Square, SNR, PSNR & entropy calculators
+│       └── utils.py                # Audio sniffing and capacity computation
+│
+└── frontend/
+    ├── package.json                # Node dependencies & build scripts
+    ├── vite.config.js              # Vite configuration with API proxy
+    ├── tailwind.config.js          # Tailwind CSS theme & cyber palette
+    ├── index.html                  # HTML entry point
+    └── src/
+        ├── App.jsx                 # Main layout & tab router
+        ├── index.css               # Global styling
+        └── components/
+            ├── Header.jsx          # Header & theory modal
+            ├── AudioWaveform.jsx   # WaveSurfer.js interactive waveform player
+            ├── EncodeTab.jsx       # OTP encryption & carrier embedding tab
+            ├── DecodeTab.jsx       # Extraction & OTP decryption tab
+            └── SteganalysisLab.jsx # Comparative Chi-Square & acoustic audit lab
+```
