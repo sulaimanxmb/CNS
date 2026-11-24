@@ -23,12 +23,17 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Node / Frontend
 frontend/node_modules/
 node_modules/
 frontend/dist/
 dist/
+.vite/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -45,8 +50,12 @@ yarn-error.log*
 .idea/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 .DS_Store
+._*
 Thumbs.db
+ehthumbs.db
 
 # Audio Outputs & Temp Files
 *.tmp
